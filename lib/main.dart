@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 void main() {
@@ -49,7 +51,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
-
+  bool _reversed = false;
+  List<UniqueKey> _buttonKeys = [UniqueKey(), UniqueKey()];
   void _increase_counter() {
     _counter++;
   }
@@ -69,8 +72,42 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() => _counter--);
   }
 
+  void _resetCounter() {
+    setState(() => _counter = 0);
+    _swap();
+  }
+
+  void _swap() {
+    setState(() {
+      _reversed = !_reversed;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final incrementButton = FancyButton(
+      key: _buttonKeys.first,
+      child: const Text(
+        "Increment",
+        style: TextStyle(color: Colors.white),
+      ),
+      onPressed: _incrementCounter,
+    );
+
+    final decrementButton = FancyButton(
+      key: _buttonKeys.last,
+      child: const Text(
+        "Decrement",
+        style: TextStyle(color: Colors.white),
+      ),
+      onPressed: _decrementCounter,
+    );
+
+    List<Widget> _buttons = <Widget>[incrementButton, decrementButton];
+
+    if (_reversed) {
+      _buttons = _buttons.reversed.toList();
+    }
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -103,6 +140,16 @@ class _MyHomePageState extends State<MyHomePage> {
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Container(
+                margin: EdgeInsets.only(bottom: 50.0),
+                padding: EdgeInsets.all(8.0),
+                decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(4.0)),
+                child: Image.asset(
+                  'resource/logo.png',
+                  width: 100.0,
+                )),
             const Text(
               'You have clicked the button this many times:',
             ),
@@ -111,31 +158,32 @@ class _MyHomePageState extends State<MyHomePage> {
               style: Theme.of(context).textTheme.headline4,
             ),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                    style: ElevatedButton.styleFrom(primary: Colors.red),
-                    onPressed: _decrementCounter,
-                    child: const Text(
-                      "Decrement",
-                      style: TextStyle(color: Colors.white),
-                    )),
-                ElevatedButton(
-                    style: ElevatedButton.styleFrom(primary: Colors.green),
-                    onPressed: _incrementCounter,
-                    child: const Text(
-                      "Increment",
-                      style: TextStyle(color: Colors.white),
-                    )),
-              ],
-            )
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: _buttons
+                // children: [
+                //   ElevatedButton(
+                //       style: ElevatedButton.styleFrom(primary: Colors.red),
+                //       onPressed: _decrementCounter,
+                //       child: const Text(
+                //         "Decrement",
+                //         style: TextStyle(color: Colors.white),
+                //       )),
+                //   ElevatedButton(
+                //       style: ElevatedButton.styleFrom(primary: Colors.green),
+                //       onPressed: _incrementCounter,
+                //       child: const Text(
+                //         "Increment",
+                //         style: TextStyle(color: Colors.white),
+                //       )),
+                // ],
+                )
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+        onPressed: _resetCounter,
+        tooltip: 'Reset',
+        child: const Icon(Icons.refresh),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
@@ -153,4 +201,42 @@ class PanicButton extends StatelessWidget {
         child: display,
         style: ElevatedButton.styleFrom(primary: Colors.red),
       );
+}
+
+class FancyButton extends StatefulWidget {
+  final VoidCallback? onPressed;
+  final Widget? child;
+
+  const FancyButton({Key? key, this.onPressed, this.child}) : super(key: key);
+  @override
+  _FancyButtonState createState() => _FancyButtonState();
+}
+
+class _FancyButtonState extends State<FancyButton> {
+  Map<_FancyButtonState, Color> _buttonColors = {};
+  final _random = Random();
+  int next(int min, int max) => min + Random().nextInt(max - min);
+  List<Color> colors = [
+    Colors.blue,
+    Colors.green,
+    Colors.orange,
+    Colors.purple,
+    Colors.amber,
+    Colors.indigo,
+  ];
+
+  Color _getColors() {
+    return _buttonColors.putIfAbsent(this, () => colors[next(0, 5)]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: ElevatedButton(
+        child: widget.child,
+        onPressed: widget.onPressed,
+        style: ElevatedButton.styleFrom(primary: _getColors()),
+      ),
+    );
+  }
 }
